@@ -1,5 +1,6 @@
 package com.spidey01.rpigo.app;
 
+import android.content.Intent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.app.Activity;
@@ -17,6 +18,10 @@ public class DeviceDiscoveryActivity
 {
     private final static String TAG = "DeviceDiscoveryActivity";
 
+    public final static int FIND_DEVICE = RESULT_FIRST_USER + 1;
+
+    /** Result string used to return the chosen device. */
+    public static final String RESULT_STRING = DeviceDiscoveryActivity.class.getCanonicalName()+".RESULT_STRING";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +67,11 @@ public class DeviceDiscoveryActivity
     @Override
     public void onDeviceSelected(String device) {
         Log.d(TAG, "onDeviceSelected(): " + device);
+
+        Intent intent = new Intent();
+        intent.putExtra(RESULT_STRING, device);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
 
