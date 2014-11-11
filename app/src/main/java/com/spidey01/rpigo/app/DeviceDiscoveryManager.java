@@ -46,7 +46,7 @@ public class DeviceDiscoveryManager
          *
          * Note this may be called from a background thread.
          *
-         * @param deviceInfo
+         * @param deviceInfo info about the discovered device.
          */
         void onDeviceDiscovered(DeviceInfo deviceInfo);
     }

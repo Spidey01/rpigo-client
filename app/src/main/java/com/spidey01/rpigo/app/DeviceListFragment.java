@@ -22,12 +22,12 @@ import android.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+//import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.util.Log;
 
 
-import com.spidey01.rpigo.app.dummy.DummyContent;
+//import com.spidey01.rpigo.app.dummy.DummyContent;
 
 /**
  * A fragment representing a list of Raspberry Pi's or more precisely: RPIGO servers.
@@ -173,7 +173,7 @@ public class DeviceListFragment
         Log.v(TAG, "onListItemClick()");
 
         assert mListener != null : TAG+".onListItemClick() no listener set.";
-        if (null != mListener) {
+        if (mListener != null) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
 

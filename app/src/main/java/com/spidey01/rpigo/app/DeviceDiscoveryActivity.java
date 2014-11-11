@@ -48,8 +48,8 @@ public class DeviceDiscoveryActivity
 
         if (findViewById(R.id.fragment_container) == null) {
             String m = "No fragment_container in view.";
-            Log.wtf(TAG, "Oncreate(): "+m);
-            // superfurious.
+            Log.wtf(TAG, "onCreate(): "+m);
+            // superfluous.
             throw new RuntimeException(m);
         }
 
