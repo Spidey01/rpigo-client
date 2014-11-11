@@ -34,13 +34,21 @@ import com.spidey01.rpigo.app.dummy.DummyContent;
  *
  * Activities containing this fragment MUST implement the {@link OnDeviceSelectedListener}
  * interface if they wish to listen for device selections.
+ *
+ * android.permission.INTERNET is also required for network access.
  */
 public class DeviceListFragment
     extends ListFragment
 {
     private static final String TAG = "DeviceListFragment";
 
+    private DeviceDiscoveryManager mSearcher;
+
     private OnDeviceSelectedListener mListener;
+
+    /** Cache our ListAdapter. */
+    private DeviceDiscoveryAdapter mAdapter;
+
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -53,15 +61,27 @@ public class DeviceListFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.d(TAG, "onCreate(): savedInstanceState="+savedInstanceState);
 
         // TODO: Change Adapter to display your content
-        setListAdapter(new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS));
+        // setListAdapter(new ArrayAdapter<DummyContent.DummyItem>(getActivity(),
+        //         android.R.layout.simple_list_item_1, android.R.id.text1, DummyContent.ITEMS));
+
+        /* XXX
+         *      Remember: onCreate() is called after onAttach(). So mAdapter=null in onAttach()!
+         */
+        Log.d(TAG, "onCreate(): configurize our ListAdapter.");
+        mAdapter = new DeviceDiscoveryAdapter(getActivity(), android.R.layout.simple_list_item_1, android.R.id.text1);
+        setListAdapter(mAdapter);
+
+        Log.d(TAG, "onCreate(): Setting up discovery manager.");
+        mSearcher = new DeviceDiscoveryManager(getActivity());
     }
 
 
     /** Called when this fragment has been associated with an Activity.
+     *
+     * The hosting Activity is expected to implement our listener interface to get the selected DeviceInfo.
      *
      * @throws java.lang.ClassCastException if activity does not implement {@link com.spidey01.rpigo.app.DeviceListFragment.OnDeviceSelectedListener}.
      */
@@ -69,6 +89,8 @@ public class DeviceListFragment
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         Log.v(TAG, "onAttach()");
+
+        Log.d(TAG, "Setting our activity as our listener");
         try {
             mListener = (OnDeviceSelectedListener) activity;
         } catch (ClassCastException e) {
@@ -78,9 +100,55 @@ public class DeviceListFragment
     }
 
 
+    /**
+     * Called when the fragment is visible to the user and actively running.
+     * This is generally
+     * tied to {@link android.app.Activity#onResume() Activity.onResume} of the containing
+     * Activity's lifecycle.
+     */
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.device_list_fragment, container, false);
+    public void onResume() {
+        Log.d(TAG, "onResume()");
+
+        /*
+         * Here lies  the magic behind populating this list.
+         */
+        mSearcher.registerListener(mAdapter);
+        mSearcher.startDiscovery();
+
+        super.onResume();
+    }
+
+
+    /**
+     * Called when the Fragment is no longer resumed.  This is generally
+     * tied to {@link android.app.Activity#onPause() Activity.onPause} of the containing
+     * Activity's lifecycle.
+     */
+    @Override
+    public void onPause() {
+        Log.d(TAG, "onPause()");
+
+        mSearcher.stopDiscovery();
+        mSearcher.unregisterListener(mAdapter);
+
+        /*
+         *  Clear the adapter's data after pausing because when we resume, DeviceDiscoveryManager will
+         *  start from the beginning again.
+         *
+         *  TODO: test if that's true or if NsdManager won't report previously found services a second time
+         *        when doing code like this:
+         *
+         *              mNsdManager.discoverServices(...);
+         *              mNsdManager.stopDiscovery(...);
+         *              mNsdManager.discoverServices(...);
+         *
+         *        I assume it starts fresh.
+         *
+         */
+        mAdapter.clear();
+
+        super.onPause();
     }
 
 
@@ -88,7 +156,14 @@ public class DeviceListFragment
     public void onDetach() {
         super.onDetach();
         Log.v(TAG, "onDetach()");
+        mSearcher = null;
         mListener = null;
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.device_list_fragment, container, false);
     }
 
 
@@ -101,7 +176,11 @@ public class DeviceListFragment
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onDeviceSelected(DummyContent.ITEMS.get(position).id);
+
+            //mListener.onDeviceSelected(DummyContent.ITEMS.get(position).id);
+            DeviceInfo deviceInfo = (DeviceInfo)getListView().getItemAtPosition(position);
+            String debug = deviceInfo.getHostname() + "@" + deviceInfo.getIP() + ":" + deviceInfo.getPort();
+            mListener.onDeviceSelected(debug);
         }
     }
 
