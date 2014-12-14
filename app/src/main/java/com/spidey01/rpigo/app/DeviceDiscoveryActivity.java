@@ -106,6 +106,15 @@ public class DeviceDiscoveryActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        if (id == R.id.action_refresh) {
+            Log.v(TAG, "onOptionsItemSelected() handling action_refresh.");
+            DeviceListFragment deviceListFragment =
+                (DeviceListFragment)getFragmentManager()
+                        .findFragmentById(R.id.fragment_container);
+            deviceListFragment.refresh();
+            return true;
+        }
+
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;

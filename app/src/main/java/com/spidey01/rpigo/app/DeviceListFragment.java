@@ -113,8 +113,7 @@ public class DeviceListFragment
         /*
          * Here lies  the magic behind populating this list.
          */
-        mSearcher.registerListener(mAdapter);
-        mSearcher.startDiscovery();
+        startDiscovery(mAdapter);
 
         super.onResume();
     }
@@ -129,22 +128,12 @@ public class DeviceListFragment
     public void onPause() {
         Log.d(TAG, "onPause()");
 
-        mSearcher.stopDiscovery();
-        mSearcher.unregisterListener(mAdapter);
-
+        stopDiscovery(mAdapter);
         /*
          *  Clear the adapter's data after pausing because when we resume, DeviceDiscoveryManager will
          *  start from the beginning again.
          *
-         *  TODO: test if that's true or if NsdManager won't report previously found services a second time
-         *        when doing code like this:
-         *
-         *              mNsdManager.discoverServices(...);
-         *              mNsdManager.stopDiscovery(...);
-         *              mNsdManager.discoverServices(...);
-         *
-         *        I assume it starts fresh.
-         *
+         *  Which will then re-report devices that may or may not already be in the adapter.
          */
         mAdapter.clear();
 
@@ -198,6 +187,25 @@ public class DeviceListFragment
     public interface OnDeviceSelectedListener {
         // TODO: Update argument type and name
         public void onDeviceSelected(String id);
+    }
+
+
+    public void startDiscovery(DeviceDiscoveryManager.OnDeviceDiscoveredListener listener) {
+        mSearcher.registerListener(listener);
+        mSearcher.startDiscovery();
+    }
+
+
+    public void stopDiscovery(DeviceDiscoveryManager.OnDeviceDiscoveredListener listener) {
+        mSearcher.stopDiscovery();
+        mSearcher.unregisterListener(listener);
+    }
+
+
+    public void refresh() {
+        stopDiscovery(mAdapter);
+        mAdapter.clear();
+        startDiscovery(mAdapter);
     }
 
 }
